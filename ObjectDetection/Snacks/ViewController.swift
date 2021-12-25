@@ -179,16 +179,61 @@ class ViewController: UIViewController {
     }
   }
 
-  func processObservations(for request: VNRequest, error: Error?) {
-    //call show function
-  }
 
-  func show(predictions: [VNRecognizedObjectObservation]) {
-   //process the results, call show function in BoundingBoxView
+
 }
 
 extension ViewController: VideoCaptureDelegate {
   func videoCapture(_ capture: VideoCapture, didCaptureVideoFrame sampleBuffer: CMSampleBuffer) {
     predict(sampleBuffer: sampleBuffer)
   }
+}
+
+extension ViewController{
+    func processObservations(for request: VNRequest, error: Error?){
+        DispatchQueue.main.async{
+            if let results = request.results as? [VNRecognizedObjectObservation]{
+                if results.isEmpty {
+                    print("nothing found!")
+                } else {
+                    self.show(predictions: results)
+                }
+            }else if let error = error{
+                print(error.localizedDescription)
+            }else{
+                print("???")
+            }
+        }
+    }
+    
+    func show(predictions: [VNRecognizedObjectObservation]) {
+     //process the results, call show function in BoundingBoxView
+//        for boxID in 0..<boundingBoxViews.count{
+//            if boxID >= predictions.count{
+//                boundingBoxViews[boxID].hide()
+//                continue
+//            }
+//            let prediction = predictions[boxID]
+//            let width = view.bounds.width
+//            let height = width * 1280 / 720
+//            boundingBoxViews[boxID].show(frame: prediction.boundingBox.applying(CGAffineTransform.identity.scaledBy(x: view.bounds.width, y: view.bounds.width * 1280 / 720)).applying(CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -(height + view.bounds.height)/2)), label: prediction.labels[0].identifier, color: colors[prediction.labels[0].identifier]!)
+//        }
+              var index=0
+
+              for i in predictions{
+                  let width = view.bounds.width
+                  let height = width * 1280 / 720
+                  boundingBoxViews[index].show(frame: i.boundingBox.applying(CGAffineTransform.identity.scaledBy(x: view.bounds.width, y: view.bounds.width * 1280 / 720)).applying(CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -(height + view.bounds.height)/2)), label: i.labels[0].identifier, color: colors[i.labels[0].identifier]!)
+
+                  index+=1
+                  if index>=maxBoundingBoxViews{
+                      break
+                  }
+              }
+              if index<maxBoundingBoxViews{
+              for j in index...maxBoundingBoxViews-1{
+                  boundingBoxViews[j].hide()
+              }
+              }
+    }
 }
